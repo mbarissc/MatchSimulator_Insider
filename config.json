@@ -1,0 +1,8 @@
+{
+  "database": {
+    "connectionString": "postgres://<YOUR-DB-USER>:<YOUR-DB-PASSWORD>@localhost:5432/<YOUR-DB-NAME>?sslmode=disable"
+  },
+  "server": {
+    "port": "8080"
+  }
+}
