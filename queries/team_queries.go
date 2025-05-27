@@ -1,4 +1,3 @@
-// FILE: queries/team_queries.go
 package queries
 
 const (
