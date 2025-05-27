@@ -249,3 +249,96 @@ CREATE TABLE matches (
 );
 
 CREATE INDEX idx_matches_week ON matches(week);
+
+## 6. Key SQL Queries Used
+
+The application utilizes SQL queries stored as constants in the `/queries` package. Below are the primary queries used:
+
+### From `queries/team_queries.go`:
+
+```sql
+// CreateTeamCheckExistsSQL: Checks if a team exists by name.
+const CreateTeamCheckExistsSQL = `SELECT id FROM teams WHERE name = $1`
+
+// CreateTeamInsertSQL: Inserts a new team with zeroed stats.
+// Parameters: $1 = name, $2 = strength
+const CreateTeamInsertSQL = `
+    INSERT INTO teams (name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points)
+    VALUES ($1, $2, 0, 0, 0, 0, 0, 0, 0, 0)
+    RETURNING id`
+
+// GetTeamByIDSQL: Retrieves a team by its ID.
+// Parameters: $1 = teamID
+const GetTeamByIDSQL = `
+    SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
+    FROM teams 
+    WHERE id = $1`
+
+// GetAllTeamsSQL: Retrieves all teams, ordered for league table display.
+const GetAllTeamsSQL = `
+    SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
+    FROM teams 
+    ORDER BY points DESC, goal_difference DESC, goals_for DESC, name ASC`
+
+// UpdateTeamMainStatsSQL: Updates a team's main statistics after a match.
+// Parameters: $1=winIncrement, $2=drawIncrement, $3=lossIncrement, $4=goalsScored, $5=goalsConceded, $6=pointsEarned, $7=teamID
+const UpdateTeamMainStatsSQL = `
+    UPDATE teams
+    SET
+        played = played + 1,
+        wins = wins + $1,        
+        draws = draws + $2,        
+        losses = losses + $3,      
+        goals_for = goals_for + $4,  
+        goals_against = goals_against + $5, 
+        points = points + $6       
+    WHERE id = $7`
+
+// UpdateTeamGDSQL: Updates a team's goal difference.
+// Parameters: $1 = teamID
+const UpdateTeamGDSQL = `UPDATE teams SET goal_difference = goals_for - goals_against WHERE id = $1`
+
+// ResetAllTeamStatsSQL: Resets all statistics for all teams to zero.
+const ResetAllTeamStatsSQL = `
+    UPDATE teams
+    SET
+        played = 0,
+        wins = 0,
+        draws = 0,
+        losses = 0,
+        goals_for = 0,
+        goals_against = 0,
+        goal_difference = 0,
+        points = 0`
+
+// AdjustTeamStatsSQL: Adjusts a team's statistics after a match score edit.
+// Parameters: $1=deltaWins, $2=deltaDraws, $3=deltaLosses, $4=deltaGoalsFor, $5=deltaGoalsAgainst, $6=deltaPoints, $7=teamID
+const AdjustTeamStatsSQL = `
+    UPDATE teams
+    SET
+        wins = wins + $1,            
+        draws = draws + $2,            
+        losses = losses + $3,          
+        goals_for = goals_for + $4,    
+        goals_against = goals_against + $5, 
+        points = points + $6           
+    WHERE id = $7`
+
+// UpdateTeamStrengthSQL: Updates a team's strength.
+// Parameters: $1=newStrength, $2=teamID
+const UpdateTeamStrengthSQL = `UPDATE teams SET strength = $1 WHERE id = $2`
+
+// UpdateTeamNameSQL: Updates a team's name.
+// Parameters: $1=newName, $2=teamID
+const UpdateTeamNameSQL = `UPDATE teams SET name = $1 WHERE id = $2`
+
+// UpdateTeamNameAndStrengthSQL: Updates a team's name and strength.
+// Parameters: $1=newName, $2=newStrength, $3=teamID
+const UpdateTeamNameAndStrengthSQL = `UPDATE teams SET name = $1, strength = $2 WHERE id = $3`
+
+// GetAllTeamsOrderedByIDSQL: Retrieves all teams ordered by their ID.
+const GetAllTeamsOrderedByIDSQL = `
+    SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
+    FROM teams 
+    ORDER BY id ASC`
+
