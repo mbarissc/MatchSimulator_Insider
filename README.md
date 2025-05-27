@@ -72,9 +72,6 @@ Follow these instructions to set up and run the project locally.
           "database": {
             "connectionString": "postgres://postgres:1234@localhost:5432/football_league_sim?sslmode=disable"
           },
-          "test_database": {
-            "connectionString": "postgres://postgres:1234@localhost:5432/football_league_sim_test?sslmode=disable"
-          },
           "server": {
             "port": "8080"
           }
