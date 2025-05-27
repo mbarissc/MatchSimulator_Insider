@@ -40,7 +40,7 @@ func main() {
 			},
 		}
 	}
-	log.Println("✅ Configuration successfully loaded or defaults applied.")
+	log.Println("Configuration successfully loaded or defaults applied.")
 
 	// 2. Application Startup Settings
 	rand.Seed(time.Now().UnixNano())
@@ -53,14 +53,14 @@ func main() {
 
 	dbConn, errDb := pgx.Connect(context.Background(), connStr)
 	if errDb != nil {
-		log.Fatalf("❌ Could not connect to the database: %v", errDb)
+		log.Fatalf("Could not connect to the database: %v", errDb)
 	}
 	defer dbConn.Close(context.Background())
 
 	if errDb = dbConn.Ping(context.Background()); errDb != nil {
-		log.Fatalf("❌ Could not ping the database: %v", errDb)
+		log.Fatalf("Could not ping the database: %v", errDb)
 	}
-	log.Println("✅ Successfully connected to PostgreSQL database!")
+	log.Println("Successfully connected to PostgreSQL database!")
 
 	// 4. Initialization of Services
 	teamService := concretes.NewPostgresTeamService(dbConn)
@@ -86,39 +86,39 @@ func main() {
 		for _, teamData := range teamsToSeed {
 			createdID, createErr := teamService.CreateTeam(context.Background(), teamData)
 			if createErr != nil {
-				log.Printf("⚠️  Error processing team %s during seed: %v", teamData.Name, createErr)
+				log.Printf("Error processing team %s during seed: %v", teamData.Name, createErr)
 			} else {
 				log.Printf("INFO: Create/check operation completed for team %s (ID: %d).", teamData.Name, createdID)
 			}
 		}
 		allCurrentTeams, err = teamService.GetAllTeams(context.Background())
 		if err != nil {
-			log.Fatalf("❌ Could not fetch teams after seeding attempt: %v", err)
+			log.Fatalf("Could not fetch teams after seeding attempt: %v", err)
 		}
 	} else {
 		log.Printf("INFO: Sufficient number of teams (%d) already seem to exist in the database.", currentTeamCount)
 	}
 	if len(allCurrentTeams) < 4 {
-		log.Fatalf("❌ Still insufficient teams for setup (%d). At least 4 teams required.", len(allCurrentTeams))
+		log.Fatalf("Still insufficient teams for setup (%d). At least 4 teams required.", len(allCurrentTeams))
 	}
 	teamsForFixture := allCurrentTeams[:4]
 	if len(allCurrentTeams) > 4 {
-		log.Printf("⚠️  %d teams found in database, using the first 4 for the fixture.", len(allCurrentTeams))
+		log.Printf("⚠ %d teams found in database, using the first 4 for the fixture.", len(allCurrentTeams))
 	}
 	existingMatches, err := matchService.GetAllMatches(context.Background())
 	if err != nil {
-		log.Fatalf("❌ Error checking existing matches: %v", err)
+		log.Fatalf("Error checking existing matches: %v", err)
 	}
 	if len(existingMatches) == 0 {
 		log.Println("INFO: No matches found. Initializing new league: resetting team stats and generating fixture...")
 		if err := teamService.ResetAllTeamStats(context.Background()); err != nil {
-			log.Fatalf("❌ Error resetting team stats for initial fixture generation: %v", err)
+			log.Fatalf("Error resetting team stats for initial fixture generation: %v", err)
 		}
-		log.Println("✅ Team statistics reset for new league.")
+		log.Println("Team statistics reset for new league.")
 		if errGen := matchService.GenerateAndStoreFixture(context.Background(), teamsForFixture); errGen != nil {
-			log.Fatalf("❌ Critical error while creating initial league fixture: %v", errGen)
+			log.Fatalf("Critical error while creating initial league fixture: %v", errGen)
 		}
-		log.Println("✅ New league fixture successfully generated.")
+		log.Println("New league fixture successfully generated.")
 	} else {
 		log.Println("INFO: Existing matches found. League will attempt to resume. Use /reset-league API for a full manual reset.")
 	}
@@ -126,7 +126,7 @@ func main() {
 	if err == nil && initialTable != nil {
 		printLeagueTableForLog("League Table at API Startup", initialTable)
 	} else if err != nil {
-		log.Printf("⚠️ Error retrieving initial league table: %v", err)
+		log.Printf("Error retrieving initial league table: %v", err)
 	}
 
 	// 6. Start API Server
@@ -134,10 +134,10 @@ func main() {
 	api.RegisterRoutes(mux, leagueService, teamService, matchService)
 
 	port := cfg.Server.Port // Yapılandırmadan portu al
-	log.Printf("🚀 API server starting on http://localhost:%s ...", port)
+	log.Printf("API server starting on http://localhost:%s ...", port)
 
 	errDb = http.ListenAndServe(":"+port, mux)
 	if errDb != nil {
-		log.Fatalf("❌ Critical error starting API server: %v", errDb)
+		log.Fatalf("Critical error starting API server: %v", errDb)
 	}
 }
