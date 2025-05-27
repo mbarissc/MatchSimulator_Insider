@@ -166,8 +166,6 @@ func (s *PostgresMatchService) GetAllMatches(ctx context.Context) ([]models.Matc
 }
 
 // SimulateMatchOutcome simulates the score of a match between two teams
-// based on their strengths and a home advantage factor.
-// The random seed should be initialized once at application startup (e.g., in main.go).
 func (s *PostgresMatchService) SimulateMatchOutcome(ctx context.Context, homeTeam models.Team, awayTeam models.Team) (homeGoals int, awayGoals int, err error) {
 	// Parameters and constants for simulation
 	maxPotentialGoals := 6 // Max potential scoring opportunities for each team
