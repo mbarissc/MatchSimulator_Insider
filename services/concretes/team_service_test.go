@@ -1,11 +1,11 @@
-package concretes // Test edilen paketle aynı paket adı
+package concretes 
 
 import (
-	"testing" // Go'nun testing paketini import ediyoruz
+	"testing" 
 )
 
 func TestCalculateOutcomeMetrics(t *testing.T) {
-	// Test senaryoları (test cases)
+	
 	testCases := []struct {
 		name           string
 		goalsFor       int
@@ -71,10 +71,9 @@ func TestCalculateOutcomeMetrics(t *testing.T) {
 		},
 	}
 
-	// Her bir test senaryosunu çalıştır
+	// Run each test case
 	for _, tc := range testCases {
-		// t.Run, her senaryoyu ayrı bir alt test olarak çalıştırır.
-		// Bu, `go test -v` ile çalıştırıldığında daha detaylı çıktı alınmasını sağlar.
+		//  t.run runs each scenario as a seperate subset
 		t.Run(tc.name, func(t *testing.T) {
 			points, wins, draws, losses := calculateOutcomeMetrics(tc.goalsFor, tc.goalsAgainst)
 
