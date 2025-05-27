@@ -249,18 +249,20 @@ const CreateTeamCheckExistsSQL =
 // CreateTeamInsertSQL: Inserts a new team with zeroed stats.
 const CreateTeamInsertSQL = 
     ```sql
+    
     INSERT INTO teams (name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points)
     VALUES ($1, $2, 0, 0, 0, 0, 0, 0, 0, 0)
     RETURNING id`
-    ```
+
 
 // GetTeamByIDSQL: Retrieves a team by its ID.
-const GetTeamByIDSQL = 
+const GetTeamByIDSQL =
+
    ```sql
     SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
     FROM teams 
     WHERE id = $1`
-```
+   ```
 // GetAllTeamsSQL: Retrieves all teams, ordered for league table display.
 const GetAllTeamsSQL = 
 ```sql
@@ -305,7 +307,8 @@ const ResetAllTeamStatsSQL = `
 ```
 // AdjustTeamStatsSQL: Adjusts a team's statistics after a match score edit.
 const AdjustTeamStatsSQL = 
-    ```sql
+   
+   ```sql
     UPDATE teams
     SET
         wins = wins + $1,            
@@ -315,7 +318,8 @@ const AdjustTeamStatsSQL =
         goals_against = goals_against + $5, 
         points = points + $6           
     WHERE id = $7
-    ```
+
+```
 
 // UpdateTeamStrengthSQL: Updates a team's strength.
 const UpdateTeamStrengthSQL = 
@@ -334,11 +338,12 @@ const UpdateTeamNameAndStrengthSQL =
 ```
 // GetAllTeamsOrderedByIDSQL: Retrieves all teams ordered by their ID.
 const GetAllTeamsOrderedByIDSQL = 
-    ```sql   
+    
+   ```sql   
     SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
     FROM teams 
     ORDER BY id ASC`
-    ```
+   ```
 
 From queries/match_queries.go:
 
