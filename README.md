@@ -240,10 +240,10 @@ CREATE INDEX idx_matches_week ON matches(week);
 The application utilizes SQL queries stored as constants in the /queries package.
 
 From queries/team_queries.go:
-
+```sql
 // CreateTeamCheckExistsSQL: Checks if a team exists by name.
 const CreateTeamCheckExistsSQL = `SELECT id FROM teams WHERE name = $1`
-
+```
 // CreateTeamInsertSQL: Inserts a new team with zeroed stats.
 const CreateTeamInsertSQL = `
     INSERT INTO teams (name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points)
