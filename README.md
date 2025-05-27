@@ -139,7 +139,7 @@ The API allows interaction with the football league simulation. All request/resp
 ### Predictions
 
 * **`GET /predictions`**
-    * **Description:** Retrieves championship predictions. Available after 4 weeks are completed. [cite: 8, 26]
+    * **Description:** Retrieves championship predictions. Available after 4 weeks are completed. 
     * **Success Response (200 OK):**
         ```json
         [
@@ -190,7 +190,7 @@ The API allows interaction with the football league simulation. All request/resp
         ```
 
 * **`PUT /matches/{id}`** (Extra Feature)
-    * **Description:** Edits the score of a previously played match. Standings are recalculated. [cite: 17, 35]
+    * **Description:** Edits the score of a previously played match. Standings are recalculated. 
     * **Path Parameter:** `{id}` - ID of the match.
     * **Request Body (JSON):** `{"home_goals": 3, "away_goals": 1}`
     * **Success Response (200 OK):**
