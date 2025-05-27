@@ -233,6 +233,7 @@ CREATE TABLE matches (
 );
 
 CREATE INDEX idx_matches_week ON matches(week);
+```
 
 ## 6. Key SQL Queries Used
 
