@@ -1,4 +1,3 @@
-// FILE: queries/match_queries.go
 package queries
 
 const (
