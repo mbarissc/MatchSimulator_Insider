@@ -6,6 +6,16 @@ This project is a GoLang application that simulates a 4-team football league. It
 
 The project utilizes an interface-based design and struct composition as requested. It uses PostgreSQL for data persistence.
 
+
+
+## Live API Access
+
+This project has been deployed to Google Cloud Run and is publicly accessible via the following link:
+
+**Base API URL:** `https://football-sim-api-606877919106.europe-west1.run.app`
+
+
+
 ## Features
 
 * **4-Team League Simulation:** Simulates a full season for 4 distinct football teams.
