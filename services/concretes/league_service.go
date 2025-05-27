@@ -365,7 +365,7 @@ func (s *LeagueService) ResetLeague(ctx context.Context) error {
 		log.Printf("LeagueService.ResetLeague ERROR: Could not regenerate fixture: %v", err)
 		return fmt.Errorf("LeagueService.ResetLeague: Error regenerating fixture: %w", err)
 	}
-	log.Println("✅ LeagueService.ResetLeague: League successfully reset (statistics and fixture).")
+	log.Println("LeagueService.ResetLeague: League successfully reset (statistics and fixture).")
 	return nil
 }
 
@@ -476,6 +476,6 @@ func (s *LeagueService) HandleMatchScoreEdit(ctx context.Context, matchID int, n
 		return fmt.Errorf("HandleMatchScoreEdit: Error adjusting stats for away team (ID: %d): %w", originalMatch.AwayTeamID, err)
 	}
 
-	log.Printf("✅ LeagueService.HandleMatchScoreEdit: Score edit and stat adjustment completed for Match ID %d.", matchID)
+	log.Printf("LeagueService.HandleMatchScoreEdit: Score edit and stat adjustment completed for Match ID %d.", matchID)
 	return nil
 }
