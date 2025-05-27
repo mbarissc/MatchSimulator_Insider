@@ -8,7 +8,7 @@ The project utilizes an interface-based design and struct composition as request
 
 
 
-## Live API Access
+## 🌐 Live API Access 
 
 This project has been deployed to Google Cloud Run and is publicly accessible via the following link:
 
