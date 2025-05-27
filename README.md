@@ -84,8 +84,41 @@ Follow these instructions to set up and run the project locally.
     ```
     The API server will start, typically on `http://localhost:8080` (or the port specified in `config.json`).
 
+## 4. SQL Schema
+
+The database schema consists of two main tables: `teams` and `matches`.
+
+```sql
+CREATE TABLE teams (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    strength INTEGER DEFAULT 50,
+    played INTEGER DEFAULT 0,
+    wins INTEGER DEFAULT 0,
+    draws INTEGER DEFAULT 0,
+    losses INTEGER DEFAULT 0,
+    goals_for INTEGER DEFAULT 0,
+    goals_against INTEGER DEFAULT 0,
+    goal_difference INTEGER DEFAULT 0,
+    points INTEGER DEFAULT 0
+);
+
+CREATE TABLE matches (
+    id SERIAL PRIMARY KEY,
+    week INTEGER NOT NULL,
+    home_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    away_team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    home_goals INTEGER,
+    away_goals INTEGER,
+    is_played BOOLEAN DEFAULT FALSE,
+    CONSTRAINT check_different_teams CHECK (home_team_id <> away_team_id)
+);
+
+CREATE INDEX idx_matches_week ON matches(week);
+```
+
 ---
-## 4. API Endpoint Documentation
+## 5. API Endpoint Documentation
 
 The API allows interaction with the football league simulation. All request/response bodies are in JSON format. The default base URL is `http://localhost:8080`.
 
