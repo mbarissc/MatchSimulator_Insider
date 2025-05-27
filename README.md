@@ -10,13 +10,13 @@ The project utilizes an interface-based design and struct composition as request
 
 * **4-Team League Simulation:** Simulates a full season for 4 distinct football teams.
 * **Team Strengths:** Teams can have different strength values, which influence match outcomes. Team names and strengths can be updated via API.
-* **Premier League Rules:** Applies standard Premier League rules for match points (3 for a win, 1 for a draw) and league table sorting (Points > Goal Difference > Goals For). [cite: 4, 22]
-* **Weekly Progression:** Simulates the league week by week. [cite: 6, 24]
-* **Match Results & League Table:** Displays match results and the updated league table after each week. [cite: 6, 20, 24, 25]
-* **Championship Predictions:** Provides championship probability estimations for each team after the 4th week. [cite: 8, 26]
-* **API Driven:** All league operations are managed through well-defined API endpoints. [cite: 11, 29]
-* **Full Season Simulation (`/play-all`):** (Extra Feature) Plays all remaining weeks automatically and lists results by week. [cite: 16, 34]
-* **Edit Match Results (`/matches/{id}`):** (Extra Feature) Allows editing scores of previously played matches, with automatic recalculation of standings. [cite: 17, 35]
+* **Premier League Rules:** Applies standard Premier League rules for match points (3 for a win, 1 for a draw) and league table sorting (Points > Goal Difference > Goals For). 
+* **Weekly Progression:** Simulates the league week by week. 
+* **Match Results & League Table:** Displays match results and the updated league table after each week. 
+* **Championship Predictions:** Provides championship probability estimations for each team after the 4th week. 
+* **API Driven:** All league operations are managed through well-defined API endpoints. 
+* **Full Season Simulation (`/play-all`):** (Extra Feature) Plays all remaining weeks automatically and lists results by week. 
+* **Edit Match Results (`/matches/{id}`):** (Extra Feature) Allows editing scores of previously played matches, with automatic recalculation of standings. 
 * **Team Customization:** API endpoints to update team names and strengths.
 * **League Reset:** API endpoints to reset the league to its initial state or reset teams to default configurations.
 
