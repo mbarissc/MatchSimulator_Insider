@@ -36,10 +36,9 @@ Follow these instructions to set up and run the project locally.
 1.  **Install PostgreSQL:** Ensure PostgreSQL is installed and running on your system.
 2.  **Create Database:**
     * Connect to your PostgreSQL instance (e.g., using `psql -U your_postgres_user`).
-    * Create a new database. The application can be configured to use a specific database name via `config.json`. A suggested name for your main database is `football_league_sim` and for tests `football_league_sim_test`.
+    * Create a new database. The application can be configured to use a specific database name via `config.json`. A suggested name for your main database is `football_league_sim` 
         ```sql
         CREATE DATABASE football_league_sim;
-        CREATE DATABASE football_league_sim_test; -- For running automated tests
         ```
 3.  **Create Tables:** Connect to your newly created database(s) (e.g., `\c football_league_sim` in `psql`) and run the SQL commands found in **Section 5: SQL Schema** of this document.
 
