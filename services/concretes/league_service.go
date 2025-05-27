@@ -1,4 +1,3 @@
-// FILE: services/concretes/league_service.go
 package concretes
 
 import (
