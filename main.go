@@ -1,9 +1,8 @@
-// FILE: main.go
 package main
 
 import (
 	"MatchSimulator_Insider/api"
-	"MatchSimulator_Insider/config" // config paketini import et
+	"MatchSimulator_Insider/config" 
 	"MatchSimulator_Insider/models"
 	"MatchSimulator_Insider/services/concretes"
 	"context"
@@ -27,11 +26,11 @@ func printLeagueTableForLog(header string, table []models.Team) {
 
 func main() {
 	// 1. Load Configuration
-	cfg, err := config.LoadConfig("config.json") // Dosya adını tam olarak belirtiyoruz
+	cfg, err := config.LoadConfig("config.json") 
 	if err != nil {
 		log.Printf("WARNING: Error loading configuration from 'config.json': %v. Attempting to use hardcoded defaults.", err)
-		// Varsayılan bir config objesi oluştur veya kritik hata ver
-		cfg = &config.Config{ // Viper'daki gibi SetDefault mantığını burada uyguluyoruz
+	
+		cfg = &config.Config{ 
 			Database: config.DBConfig{
 				ConnectionString: "postgres://postgres:1234@localhost:5432/football_league_sim?sslmode=disable",
 			},
@@ -45,7 +44,7 @@ func main() {
 	// 2. Application Startup Settings
 	rand.Seed(time.Now().UnixNano())
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	log.Println("▶️  Application starting...")
+	log.Println("Application starting...")
 
 	// 3. Database Connection Setup
 	connStr := cfg.Database.ConnectionString
@@ -69,7 +68,6 @@ func main() {
 	log.Println("INFO: All services successfully created.")
 
 	// 5. League Setup Check (Startup)
-	// ... (Bu kısım aynı kalabilir, log mesajları hariç) ...
 	log.Println("\n--- League Setup Check (Startup) ---")
 	teamsToSeed := []models.Team{
 		{Name: "Chelsea", Strength: 85}, {Name: "Arsenal", Strength: 82},
@@ -133,7 +131,7 @@ func main() {
 	mux := http.NewServeMux()
 	api.RegisterRoutes(mux, leagueService, teamService, matchService)
 
-	port := cfg.Server.Port // Yapılandırmadan portu al
+	port := cfg.Server.Port 
 	log.Printf("API server starting on http://localhost:%s ...", port)
 
 	errDb = http.ListenAndServe(":"+port, mux)
