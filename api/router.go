@@ -7,7 +7,7 @@ import (
 )
 
 func RegisterRoutes(mux *http.ServeMux, leagueService abstracts.ILeagueService, teamService abstracts.TeamService, matchService abstracts.IMatchService) {
-	log.Println("🛣️  API rotaları kaydediliyor...")
+	log.Println("API rotaları kaydediliyor...")
 
 	leagueHandler := NewLeagueHandler(leagueService, teamService, matchService) // ITeamService kullandığımızı varsayıyorum
 
@@ -27,5 +27,5 @@ func RegisterRoutes(mux *http.ServeMux, leagueService abstracts.ILeagueService, 
 	mux.HandleFunc("PUT /teams/{id}/name", leagueHandler.UpdateTeamNameHandler)             // YENİ
 	mux.HandleFunc("POST /teams/reset-defaults", leagueHandler.ResetTeamsToDefaultsHandler) // YENİ
 
-	log.Println("✅ API rotaları başarıyla kaydedildi.")
+	log.Println("API rotaları başarıyla kaydedildi.")
 }
