@@ -12,15 +12,6 @@ import (
 	"strings"
 )
 
-// --- Request Struct'ları (api/requests.go dosyasından geldiğini varsayıyoruz) ---
-// type EditMatchScoreRequest struct { ... }
-// type UpdateTeamStrengthRequest struct { ... }
-// type UpdateTeamNameRequest struct { ... }
-// Bu struct'ların api/requests.go dosyasında olduğunu ve bu dosyanın da
-// package api olduğunu varsayıyoruz. Eğer değillerse, buraya tekrar eklenmeleri gerekir.
-// Önceki adımdaki gibi, ayrı bir api/requests.go dosyasında olduklarını kabul edelim.
-
-// LeagueHandler, lig ile ilgili HTTP isteklerini işler.
 type LeagueHandler struct {
 	leagueService abstracts.ILeagueService
 	teamService   abstracts.TeamService
