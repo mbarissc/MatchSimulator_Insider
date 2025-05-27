@@ -2,21 +2,21 @@
 
 ## Overview
 
-This project is a GoLang application that simulates a 4-team football league. [cite: 2, 20] It calculates match results based on team strengths, updates a league table according to Premier League rules[cite: 4, 22], shows weekly progress, and provides championship predictions after the 4th week using Monte Carlo simulation. [cite: 8, 26] All interactions are managed via API endpoints[cite: 11, 29], and no frontend is required. [cite: 11, 29]
+This project is a GoLang application that simulates a 4-team football league. It calculates match results based on team strengths, updates a league table according to Premier League rules, shows weekly progress, and provides championship predictions after the 4th week using Monte Carlo simulation. All interactions are managed via API endpoints.
 
-The project utilizes an interface-based design and struct composition as requested. [cite: 10, 28] It uses PostgreSQL for data persistence.
+The project utilizes an interface-based design and struct composition as requested. It uses PostgreSQL for data persistence.
 
 ## Features
 
 * **4-Team League Simulation:** Simulates a full season for 4 distinct football teams.
-* **Team Strengths:** Teams can have different strength values, which influence match outcomes. [cite: 3] Team names and strengths can be updated via API.
-* **Premier League Rules:** Applies standard Premier League rules for match points (3 for a win, 1 for a draw) and league table sorting (Points > Goal Difference > Goals For). [cite: 4, 22]
-* **Weekly Progression:** Simulates the league week by week. [cite: 6, 24]
-* **Match Results & League Table:** Displays match results and the updated league table after each week. [cite: 6, 7, 24, 25]
-* **Championship Predictions:** Provides championship probability estimations for each team after the 4th week. [cite: 8, 26]
-* **API Driven:** All league operations are managed through well-defined API endpoints. [cite: 11, 29]
-* **Full Season Simulation (`/play-all`):** (Extra Feature) Plays all remaining weeks automatically and lists results by week. [cite: 16, 34]
-* **Edit Match Results (`/matches/{id}`):** (Extra Feature) Allows editing scores of previously played matches, with automatic recalculation of standings. [cite: 17, 35]
+* **Team Strengths:** Teams can have different strength values, which influence match outcomes. Team names and strengths can be updated via API.
+* **Premier League Rules:** Applies standard Premier League rules for match points (3 for a win, 1 for a draw) and league table sorting (Points > Goal Difference > Goals For). 
+* **Weekly Progression:** Simulates the league week by week. 
+* **Match Results & League Table:** Displays match results and the updated league table after each week.
+* **Championship Predictions:** Provides championship probability estimations for each team after the 4th week.
+* **API Driven:** All league operations are managed through well-defined API endpoints. 
+* **Full Season Simulation (`/play-all`):** (Extra Feature) Plays all remaining weeks automatically and lists results by week. 
+* **Edit Match Results (`/matches/{id}`):** (Extra Feature) Allows editing scores of previously played matches, with automatic recalculation of standings. 
 * **Team Customization:** API endpoints to update team names and strengths.
 * **League Reset:** API endpoints to reset the league to its initial state or reset teams to default configurations.
 
@@ -134,7 +134,7 @@ The API provides endpoints to manage and interact with the league simulation. Al
         * In progress: `{"current_playable_week": 3, "league_status": "In Progress", "status_message": "Current playable week: 3"}`
         * Completed: `{"current_playable_week": -1, "league_status": "Completed", "status_message": "All matches have been played, the league is completed."}`
 
-* **`POST /play-all`** (Extra Feature) [cite: 16, 34]
+* **`POST /play-all`** (Extra Feature) 
     * **Description:** Simulates all remaining weeks of the league.
     * **Success Response (200 OK):**
         ```json
@@ -152,7 +152,7 @@ The API provides endpoints to manage and interact with the league simulation. Al
 ### Predictions
 
 * **`GET /predictions`**
-    * **Description:** Retrieves championship predictions. Available after 4 weeks are completed. [cite: 8, 26]
+    * **Description:** Retrieves championship predictions. Available after 4 weeks are completed. 
     * **Success Response (200 OK):**
         ```json
         [
@@ -206,7 +206,7 @@ The API provides endpoints to manage and interact with the league simulation. Al
         ```
     * **Error Response (409 Conflict):** If the new name is already in use.
 
-* **`PUT /matches/{id}`** (Extra Feature) [cite: 17, 35]
+* **`PUT /matches/{id}`** (Extra Feature) 
     * **Description:** Edits the score of a previously played match. Standings are recalculated.
     * **Path Parameter:** `{id}` - ID of the match.
     * **Request Body (JSON):** `{"home_goals": 3, "away_goals": 1}`
