@@ -240,30 +240,38 @@ CREATE INDEX idx_matches_week ON matches(week);
 The application utilizes SQL queries stored as constants in the /queries package.
 
 From queries/team_queries.go:
-```sql
+`
 // CreateTeamCheckExistsSQL: Checks if a team exists by name.
-const CreateTeamCheckExistsSQL = `SELECT id FROM teams WHERE name = $1`
+const CreateTeamCheckExistsSQL =
+```sql
+`SELECT id FROM teams WHERE name = $1`
 ```
 // CreateTeamInsertSQL: Inserts a new team with zeroed stats.
-const CreateTeamInsertSQL = `
+const CreateTeamInsertSQL = 
+    ```sql
     INSERT INTO teams (name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points)
     VALUES ($1, $2, 0, 0, 0, 0, 0, 0, 0, 0)
     RETURNING id`
+    ```
 
 // GetTeamByIDSQL: Retrieves a team by its ID.
-const GetTeamByIDSQL = `
+const GetTeamByIDSQL = 
+   ```sql
     SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
     FROM teams 
     WHERE id = $1`
-
+```
 // GetAllTeamsSQL: Retrieves all teams, ordered for league table display.
-const GetAllTeamsSQL = `
+const GetAllTeamsSQL = 
+```sql
     SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
     FROM teams 
     ORDER BY points DESC, goal_difference DESC, goals_for DESC, name ASC`
+```
 
 // UpdateTeamMainStatsSQL: Updates a team's main statistics after a match.
-const UpdateTeamMainStatsSQL = `
+const UpdateTeamMainStatsSQL = 
+```sql
     UPDATE teams
     SET
         played = played + 1,
@@ -274,12 +282,16 @@ const UpdateTeamMainStatsSQL = `
         goals_against = goals_against + $5, 
         points = points + $6       
     WHERE id = $7`
+```
 
 // UpdateTeamGDSQL: Updates a team's goal difference.
-const UpdateTeamGDSQL = `UPDATE teams SET goal_difference = goals_for - goals_against WHERE id = $1`
-
+const UpdateTeamGDSQL = 
+```sql
+`UPDATE teams SET goal_difference = goals_for - goals_against WHERE id = $1`
+```
 // ResetAllTeamStatsSQL: Resets all statistics for all teams to zero.
 const ResetAllTeamStatsSQL = `
+   ```sql 
     UPDATE teams
     SET
         played = 0,
@@ -290,9 +302,10 @@ const ResetAllTeamStatsSQL = `
         goals_against = 0,
         goal_difference = 0,
         points = 0`
-
+```
 // AdjustTeamStatsSQL: Adjusts a team's statistics after a match score edit.
-const AdjustTeamStatsSQL = `
+const AdjustTeamStatsSQL = 
+    ```sql
     UPDATE teams
     SET
         wins = wins + $1,            
@@ -301,57 +314,79 @@ const AdjustTeamStatsSQL = `
         goals_for = goals_for + $4,    
         goals_against = goals_against + $5, 
         points = points + $6           
-    WHERE id = $7`
+    WHERE id = $7
+    ```
 
 // UpdateTeamStrengthSQL: Updates a team's strength.
-const UpdateTeamStrengthSQL = `UPDATE teams SET strength = $1 WHERE id = $2`
-
+const UpdateTeamStrengthSQL = 
+```sql
+`UPDATE teams SET strength = $1 WHERE id = $2`
+```
 // UpdateTeamNameSQL: Updates a team's name.
-const UpdateTeamNameSQL = `UPDATE teams SET name = $1 WHERE id = $2`
-
+const UpdateTeamNameSQL =
+```sql
+`UPDATE teams SET name = $1 WHERE id = $2`
+```
 // UpdateTeamNameAndStrengthSQL: Updates a team's name and strength.
-const UpdateTeamNameAndStrengthSQL = `UPDATE teams SET name = $1, strength = $2 WHERE id = $3`
-
+const UpdateTeamNameAndStrengthSQL = 
+```sql
+`UPDATE teams SET name = $1, strength = $2 WHERE id = $3`
+```
 // GetAllTeamsOrderedByIDSQL: Retrieves all teams ordered by their ID.
-const GetAllTeamsOrderedByIDSQL = `
+const GetAllTeamsOrderedByIDSQL = 
+    ```sql   
     SELECT id, name, strength, played, wins, draws, losses, goals_for, goals_against, goal_difference, points 
     FROM teams 
     ORDER BY id ASC`
+    ```
 
 From queries/match_queries.go:
 
 // DeleteAllMatchesSQL: Deletes all records from the matches table.
-const DeleteAllMatchesSQL = `DELETE FROM matches`
+const DeleteAllMatchesSQL = 
+```sql
+`DELETE FROM matches`
+```
 
 // InsertMatchSQL: Inserts a new match into the matches table.
 const InsertMatchSQL = `
+   ```sql
     INSERT INTO matches (week, home_team_id, away_team_id, is_played, home_goals, away_goals)
     VALUES ($1, $2, $3, $4, $5, $6)`
+```
 
 // GetMatchesByWeekSQL: Retrieves matches for a specific week, ordered by ID.
 const GetMatchesByWeekSQL = `
+```sql
     SELECT id, week, home_team_id, away_team_id, home_goals, away_goals, is_played
     FROM matches
     WHERE week = $1
     ORDER BY id ASC`
+```
 
 // GetMatchByIDSQL: Retrieves a match by its ID.
 const GetMatchByIDSQL = `
+```sql
     SELECT id, week, home_team_id, away_team_id, home_goals, away_goals, is_played
     FROM matches
     WHERE id = $1`
+```
 
 // UpdateMatchResultSQL: Updates the score and played status of a match.
 const UpdateMatchResultSQL = `
+```sql
     UPDATE matches
     SET home_goals = $1, away_goals = $2, is_played = $3
     WHERE id = $4`
+```
 
 // GetAllMatchesSQL: Retrieves all matches, ordered by week and then ID.
 const GetAllMatchesSQL = `
+```sql
     SELECT id, week, home_team_id, away_team_id, home_goals, away_goals, is_played
     FROM matches
     ORDER BY week ASC, id ASC`
+```
 
 
 
