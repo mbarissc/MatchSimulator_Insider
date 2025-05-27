@@ -142,9 +142,9 @@ func (s *PostgresTeamService) ResetAllTeamStats(ctx context.Context) error {
 		log.Printf("!!! PostgresTeamService.ResetAllTeamStats DB.Exec ERROR: %v", err)
 		return fmt.Errorf("PostgresTeamService.ResetAllTeamStats: Error resetting team statistics: %w", err)
 	}
-	log.Printf("✅ PostgresTeamService.ResetAllTeamStats: Team statistics reset. Rows affected: %d", cmdTag.RowsAffected())
+	log.Printf("PostgresTeamService.ResetAllTeamStats: Team statistics reset. Rows affected: %d", cmdTag.RowsAffected())
 	if cmdTag.RowsAffected() < 1 { // Should be at least 1 if teams table is not empty. Ideally number of teams.
-		log.Println("⚠️ Warning: ResetAllTeamStats affected fewer rows than expected or none at all. Team table might be empty or there's an issue.")
+		log.Println("Warning: ResetAllTeamStats affected fewer rows than expected or none at all. Team table might be empty or there's an issue.")
 	}
 	log.Println("--- PostgresTeamService.ResetAllTeamStats FINISHED ---")
 	return nil
@@ -232,7 +232,7 @@ func (s *PostgresTeamService) UpdateTeamStrength(ctx context.Context, teamID int
 	if cmdTag.RowsAffected() == 0 {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamStrength: Team (ID: %d) not found or strength not updated", teamID)
 	}
-	log.Printf("✅ Team (ID: %d) strength successfully updated to %d.", teamID, newStrength)
+	log.Printf("Team (ID: %d) strength successfully updated to %d.", teamID, newStrength)
 	return nil
 }
 
@@ -267,7 +267,7 @@ func (s *PostgresTeamService) UpdateTeamName(ctx context.Context, teamID int, ne
 	if cmdTag.RowsAffected() == 0 {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamName: Team (ID: %d) not found or name not updated", teamID)
 	}
-	log.Printf("✅ Team (ID: %d) name successfully updated to '%s'.", teamID, trimmedName)
+	log.Printf("Team (ID: %d) name successfully updated to '%s'.", teamID, trimmedName)
 	return nil
 }
 
@@ -301,7 +301,7 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 		// This scenario should ideally be handled by ensuring 4 teams always exist,
 		// or this function could also create missing teams up to the default count.
 		// For now, log a warning and proceed if possible, or return an error.
-		log.Printf("⚠️ ResetTeamsToDefaults: Warning! Database has %d teams, but %d default configurations exist. Will update available teams.", len(currentTeams), len(defaultTeams))
+		log.Printf("ResetTeamsToDefaults: Warning! Database has %d teams, but %d default configurations exist. Will update available teams.", len(currentTeams), len(defaultTeams))
 		if len(currentTeams) == 0 && len(defaultTeams) > 0 {
 			return fmt.Errorf("ResetTeamsToDefaults: No teams in database to reset to defaults. Please ensure teams are seeded first.")
 		}
@@ -323,9 +323,7 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 			var conflictingID int
 			errNameCheck := tx.QueryRow(ctx, queries.CreateTeamCheckExistsSQL, defaultTeam.Name).Scan(&conflictingID)
 			if errNameCheck == nil && conflictingID != teamToUpdate.ID {
-				// A different team already has this default name. This is a conflict.
-				// This situation can happen if team names were manually changed to clash with upcoming default names.
-				// Option: Skip update, return error, or try to resolve (e.g. append suffix). For now, error.
+				
 				return fmt.Errorf("ResetTeamsToDefaults: Default name '%s' for team ID %d is already in use by team ID %d", defaultTeam.Name, teamToUpdate.ID, conflictingID)
 			}
 			if errNameCheck != nil && !errors.Is(errNameCheck, pgx.ErrNoRows) {
@@ -338,14 +336,9 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 			}
 			if cmdTag.RowsAffected() == 0 {
 				// This shouldn't happen if currentTeams[i] exists.
-				log.Printf("⚠️  ResetTeamsToDefaults: Name/strength update for team (ID: %d) affected 0 rows.", teamToUpdate.ID)
+				log.Printf("ResetTeamsToDefaults: Name/strength update for team (ID: %d) affected 0 rows.", teamToUpdate.ID)
 			}
 		} else {
-			// This case implies there are fewer teams in DB than default configurations.
-			// We could insert new teams here if that's desired behavior.
-			// For now, we only update existing teams up to the count of defaultTeams.
-			// The check `len(currentTeams) < len(defaultTeams)` above should ideally prevent this loop from running out of bounds for `currentTeams`
-			// or lead to an error before this point if strict 4-team matching is required.
 			log.Printf("ResetTeamsToDefaults: Warning: No existing team in DB at index %d to map to default team '%s'.", i, defaultTeam.Name)
 		}
 	}
@@ -354,13 +347,12 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 		return fmt.Errorf("ResetTeamsToDefaults: Could not commit transaction: %w", err)
 	}
 
-	log.Println("✅ PostgresTeamService.ResetTeamsToDefaults: Team names and strengths (and stats) reset to defaults.")
+	log.Println("PostgresTeamService.ResetTeamsToDefaults: Team names and strengths (and stats) reset to defaults.")
 	log.Println("--- PostgresTeamService.ResetTeamsToDefaults FINISHED ---")
 	return nil
 }
 
 // getAllTeamsOrderedByID is an unexported helper method to retrieve all teams ordered by their ID.
-// This is useful for ResetTeamsToDefaults to apply defaults in a consistent order.
 func (s *PostgresTeamService) getAllTeamsOrderedByID(ctx context.Context) ([]models.Team, error) {
 	rows, err := s.DB.Query(ctx, queries.GetAllTeamsOrderedByIDSQL)
 	if err != nil {
