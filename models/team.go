@@ -1,10 +1,10 @@
 package models
 
-// Team, ligdeki bir futbol takımını temsil eder.
+
 type Team struct {
 	ID             int    `json:"id"`
 	Name           string `json:"name"`
-	Strength       int    `json:"strength"` // Takım gücünü temsil eder (örneğin 1-10 arası)
+	Strength       int    `json:"strength"` 
 	Played         int    `json:"played"`
 	Wins           int    `json:"wins"`
 	Draws          int    `json:"draws"`
