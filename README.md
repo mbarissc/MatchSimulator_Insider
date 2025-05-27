@@ -14,6 +14,8 @@ This project has been deployed to Google Cloud Run and is publicly accessible vi
 
 **Base API URL:** `https://football-sim-api-606877919106.europe-west1.run.app`
 
+Details for all API endpoints and how to use them are documented in **Section 5. API Endpoint Documentation** below.
+
 
 
 ## Features
