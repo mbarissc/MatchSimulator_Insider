@@ -12,7 +12,11 @@ The project utilizes an interface-based design and struct composition as request
 
 This project has been deployed to Google Cloud Run and is publicly accessible via the following link:
 
+
+<p style="color:red; text-decoration: underline;">Google Cloud kredileri tükenmemesi için geçici olarak devre dışı bırakıldı. Test etmek için benimle iletişime geçebilirsiniz.</p>
 **Base API URL:** `https://football-sim-api-606877919106.europe-west1.run.app`
+
+
 
 Details for all API endpoints and how to use them are documented in **Section 5. API Endpoint Documentation** below.
 
