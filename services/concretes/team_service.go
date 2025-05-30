@@ -1,14 +1,14 @@
 package concretes
 
 import (
-	"MatchSimulator_Insider/models" // Update this path according to your project module name
+	"MatchSimulator_Insider/models" 
 	"MatchSimulator_Insider/queries"
 	"MatchSimulator_Insider/services/abstracts"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"strings" // Added for UpdateTeamName method's TrimSpace
+	"strings" 
 
 	"github.com/jackc/pgx/v5"
 )
