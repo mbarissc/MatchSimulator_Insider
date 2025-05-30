@@ -18,8 +18,7 @@ type PostgresTeamService struct {
 	DB *pgx.Conn
 }
 
-// NewPostgresTeamService creates a new instance of PostgresTeamService.
-// It expects an ITeamService interface, ensure your interface is named ITeamService in abstracts.
+
 func NewPostgresTeamService(db *pgx.Conn) abstracts.TeamService {
 	return &PostgresTeamService{DB: db}
 }
