@@ -178,9 +178,9 @@ func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context,
 	deltaDraws := newDraws - oldDraws
 	deltaLosses := newLosses - oldLosses
 	deltaPoints := newPoints - oldPoints
-	deltaGoalsFor := newGoalsForTeam - oldGoalsForTeam
-	deltaGoalsAgainst := newGoalsAgainstTeam - oldGoalsAgainstTeam
-	// The 'played' count does not change for an edited match result.
+	deltaGoalsFor := newGoalsForTeam - oldGoalsForTeam  // Atılan gol farkı
+	deltaGoalsAgainst := newGoalsAgainstTeam - oldGoalsAgainstTeam  // Yenilen gol farkı
+	
 
 	log.Printf("  Calculated Deltas: dPts:%d, dW:%d, dD:%d, dL:%d, dGF:%d, dGA:%d\n",
 		deltaPoints, deltaWins, deltaDraws, deltaLosses, deltaGoalsFor, deltaGoalsAgainst)
@@ -191,7 +191,7 @@ func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context,
 	}
 	defer tx.Rollback(ctx)
 
-	// Update main stats by applying deltas
+	// Ana istatistikler güncellenir
 	cmdTag, err := tx.Exec(ctx, queries.AdjustTeamStatsSQL,
 		deltaWins, deltaDraws, deltaLosses,
 		deltaGoalsFor, deltaGoalsAgainst, deltaPoints,
@@ -204,7 +204,7 @@ func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context,
 		return fmt.Errorf("AdjustTeamStatsForScoreChange: Team (ID: %d) not found (main update)", teamID)
 	}
 
-	// Recalculate Goal Difference based on the updated goals_for and goals_against
+	// Averaj yeniden hesaplanır
 	_, err = tx.Exec(ctx, queries.UpdateTeamGDSQL, teamID)
 	if err != nil {
 		return fmt.Errorf("AdjustTeamStatsForScoreChange: Error updating goal difference for team (ID: %d): %w", teamID, err)
@@ -218,10 +218,10 @@ func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context,
 	return nil
 }
 
-// UpdateTeamStrength updates the strength of a specified team.
+
 func (s *PostgresTeamService) UpdateTeamStrength(ctx context.Context, teamID int, newStrength int) error {
-	// Basic validation for strength value (e.g., between 1 and 100)
-	if newStrength < 1 || newStrength > 100 { // This range can be adjusted as per project logic
+	// Strength 1 ile 100 arasında bir değer almalıdır
+	if newStrength < 1 || newStrength > 100 { 
 		return fmt.Errorf("invalid strength value: %d. Strength must be between 1 and 100", newStrength)
 	}
 
@@ -236,9 +236,10 @@ func (s *PostgresTeamService) UpdateTeamStrength(ctx context.Context, teamID int
 	return nil
 }
 
-// UpdateTeamName updates the name of a specified team.
-// The new name must be unique across all teams.
+
+
 func (s *PostgresTeamService) UpdateTeamName(ctx context.Context, teamID int, newName string) error {
+	// Takım isminin başındaki ve sonundaki boşluk karakterleri temizlenir
 	trimmedName := strings.TrimSpace(newName)
 	if trimmedName == "" {
 		return fmt.Errorf("team name cannot be empty")
