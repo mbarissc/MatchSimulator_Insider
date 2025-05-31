@@ -13,7 +13,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// PostgresTeamService implements ITeamService using a PostgreSQL database.
 type PostgresTeamService struct {
 	DB *pgx.Conn
 }
@@ -23,40 +22,38 @@ func NewPostgresTeamService(db *pgx.Conn) abstracts.TeamService {
 	return &PostgresTeamService{DB: db}
 }
 
-// CreateTeam adds a new team to the database with zeroed statistics
-// if it doesn't already exist by name, or returns the existing team's ID.
-// Newly added teams always start with 0 statistics.
+
 func (s *PostgresTeamService) CreateTeam(ctx context.Context, team models.Team) (int, error) {
 	var id int
-	// 1. Check if team already exists by name
+	// Veritabanında team nesnesi ile aynı isimde bir takım olup olmadığını kontrol ediyoruz. Eğer varsa bu takımın id'sini id değişkenine atayacak
 	err := s.DB.QueryRow(ctx, queries.CreateTeamCheckExistsSQL, team.Name).Scan(&id)
+	// Eğer err = nil ise böyle bir takım bulunmuş demektir
 	if err == nil {
-		// Team already exists, return its current ID.
-		// log.Printf("PostgresTeamService.CreateTeam: Team '%s' (ID: %d) already exists.", team.Name, id)
 		return id, nil
 	}
-	// If the error is not pgx.ErrNoRows, it's some other unexpected database error.
+	// Eğer err hatası pgx.ErrNoRows değilse, database'de farklı türden bir hata olmuşmuş demektir
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return 0, fmt.Errorf("PostgresTeamService.CreateTeam: Database error while checking for team '%s': %w", team.Name, err)
 	}
 
-	// 2. Team does not exist, insert it as a new team (all statistics are zeroed).
+	
 	err = s.DB.QueryRow(ctx, queries.CreateTeamInsertSQL,
 		team.Name, team.Strength,
 	).Scan(&id)
 
 	if err != nil {
-		// At this point, a unique constraint violation (if one exists for name) is not expected
-		// because we checked for existence above. However, other race conditions or DB errors might occur.
+		
 		return 0, fmt.Errorf("PostgresTeamService.CreateTeam: Error adding team '%s': %w", team.Name, err)
 	}
-	// log.Printf("PostgresTeamService.CreateTeam: Team '%s' (ID: %d) successfully added (with zeroed stats).", team.Name, id)
+	
 	return id, nil
 }
 
-// GetTeamByID retrieves a team by its ID.
+
 func (s *PostgresTeamService) GetTeamByID(ctx context.Context, id int) (*models.Team, error) {
 	var team models.Team
+	
+	// Scan komutu ile bütün değişkenler team nesnesine yazılır
 	err := s.DB.QueryRow(ctx, queries.GetTeamByIDSQL, id).Scan(
 		&team.ID, &team.Name, &team.Strength, &team.Played, &team.Wins, &team.Draws,
 		&team.Losses, &team.GoalsFor, &team.GoalsAgainst, &team.GoalDifference, &team.Points,
@@ -70,14 +67,18 @@ func (s *PostgresTeamService) GetTeamByID(ctx context.Context, id int) (*models.
 	return &team, nil
 }
 
-// GetAllTeams retrieves all teams, ordered for league table display (by points, GD, GF, then name).
+
 func (s *PostgresTeamService) GetAllTeams(ctx context.Context) ([]models.Team, error) {
 	rows, err := s.DB.Query(ctx, queries.GetAllTeamsSQL)
 	if err != nil {
 		return nil, fmt.Errorf("PostgresTeamService.GetAllTeams: Error retrieving teams: %w", err)
 	}
+	
+	// Fonksiyon sonlanmadan hemen önce defer ile rows kapatılır (veritabanı sızıntısı olmaması için)
 	defer rows.Close()
 	var teams []models.Team
+	
+	// rows nesnesinin bütün satırları taranır ve teams slice'ına eklenir
 	for rows.Next() {
 		var team models.Team
 		if err := rows.Scan(&team.ID, &team.Name, &team.Strength, &team.Played, &team.Wins, &team.Draws, &team.Losses, &team.GoalsFor, &team.GoalsAgainst, &team.GoalDifference, &team.Points); err != nil {
@@ -91,24 +92,27 @@ func (s *PostgresTeamService) GetAllTeams(ctx context.Context) ([]models.Team, e
 	return teams, nil
 }
 
-// UpdateTeamStatsAfterMatch updates a team's statistics after a match result.
+
 func (s *PostgresTeamService) UpdateTeamStatsAfterMatch(ctx context.Context, teamID int, goalsScored int, goalsConceded int) error {
+	// Kazanılan puan, kazanma/beraberlik/kaybetme sayısındaki artışlar (0 veya 1 değeri alır)
 	var pointsEarned, winIncrement, drawIncrement, lossIncrement int
 	if goalsScored > goalsConceded {
 		pointsEarned = 3
 		winIncrement = 1
 	} else if goalsScored < goalsConceded {
 		lossIncrement = 1
-	} else { // goalsScored == goalsConceded
+	} else { 
 		pointsEarned = 1
 		drawIncrement = 1
 	}
 
+	// Bir transaction başlatılır
 	tx, err := s.DB.Begin(ctx)
+	
 	if err != nil {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamStatsAfterMatch: Could not begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx) // Rollback in case of error
+	defer tx.Rollback(ctx) // tx.Commit(ctx) başarısız olursa fonksiyon bitiminde transaction'ı geri alır
 
 	// Update main stats (Played, Wins, Draws, Losses, GoalsFor, GoalsAgainst, Points)
 	cmdTag, err := tx.Exec(ctx, queries.UpdateTeamMainStatsSQL,
@@ -116,14 +120,15 @@ func (s *PostgresTeamService) UpdateTeamStatsAfterMatch(ctx context.Context, tea
 		goalsScored, goalsConceded, pointsEarned,
 		teamID,
 	)
+	
 	if err != nil {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamStatsAfterMatch: Error updating main stats for team (ID: %d): %w", teamID, err)
 	}
-	if cmdTag.RowsAffected() == 0 {
+	if cmdTag.RowsAffected() == 0 { // UPDATE komutu hiçbir satırı etkilemediyse o ID'de bir takım yoktur
 		return fmt.Errorf("PostgresTeamService.UpdateTeamStatsAfterMatch: Team (ID: %d) not found (main update)", teamID)
 	}
 
-	// Update Goal Difference based on the new goals_for and goals_against
+	// Gol averajı güncellenir
 	_, err = tx.Exec(ctx, queries.UpdateTeamGDSQL, teamID)
 	if err != nil {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamStatsAfterMatch: Error updating goal difference for team (ID: %d): %w", teamID, err)
@@ -132,40 +137,36 @@ func (s *PostgresTeamService) UpdateTeamStatsAfterMatch(ctx context.Context, tea
 	return tx.Commit(ctx)
 }
 
-// ResetAllTeamStats resets all league statistics for all teams to zero.
-// Name and Strength are not affected.
+
+// Name ve Strength dışında bütün takım istatistiklerini sıfırlar
 func (s *PostgresTeamService) ResetAllTeamStats(ctx context.Context) error {
-	log.Println("--- PostgresTeamService.ResetAllTeamStats STARTED ---")
 	cmdTag, err := s.DB.Exec(ctx, queries.ResetAllTeamStatsSQL)
 	if err != nil {
 		log.Printf("!!! PostgresTeamService.ResetAllTeamStats DB.Exec ERROR: %v", err)
 		return fmt.Errorf("PostgresTeamService.ResetAllTeamStats: Error resetting team statistics: %w", err)
 	}
-	log.Printf("PostgresTeamService.ResetAllTeamStats: Team statistics reset. Rows affected: %d", cmdTag.RowsAffected())
-	if cmdTag.RowsAffected() < 1 { // Should be at least 1 if teams table is not empty. Ideally number of teams.
+	log.Printf("Team statistics reset. Rows affected: %d", cmdTag.RowsAffected())
+	if cmdTag.RowsAffected() < 1 { 
 		log.Println("Warning: ResetAllTeamStats affected fewer rows than expected or none at all. Team table might be empty or there's an issue.")
 	}
-	log.Println("--- PostgresTeamService.ResetAllTeamStats FINISHED ---")
 	return nil
 }
 
-// calculateOutcomeMetrics is a helper function that calculates points, wins, draws,
-// and losses based on goals scored and conceded for a single match outcome perspective.
+
 func calculateOutcomeMetrics(goalsFor, goalsAgainst int) (points, wins, draws, losses int) {
 	if goalsFor > goalsAgainst {
 		points = 3
 		wins = 1
 	} else if goalsFor < goalsAgainst {
 		losses = 1
-	} else { // goalsFor == goalsAgainst
+	} else { 
 		points = 1
 		draws = 1
 	}
 	return
 }
 
-// AdjustTeamStatsForScoreChange adjusts a team's statistics when a match score is changed.
-// It calculates the delta from the old score's contribution and the new score's contribution.
+
 func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context, teamID int, oldGoalsForTeam, oldGoalsAgainstTeam, newGoalsForTeam, newGoalsAgainstTeam int) error {
 	log.Printf("PostgresTeamService.AdjustTeamStatsForScoreChange: TeamID: %d, OldScore: %d-%d, NewScore: %d-%d\n",
 		teamID, oldGoalsForTeam, oldGoalsAgainstTeam, newGoalsForTeam, newGoalsAgainstTeam)
