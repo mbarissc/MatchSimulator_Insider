@@ -271,78 +271,78 @@ func (s *PostgresTeamService) UpdateTeamName(ctx context.Context, teamID int, ne
 	return nil
 }
 
-// ResetTeamsToDefaults resets all teams to their default names and strengths,
-// and also resets their league statistics.
+// Name ve Strengthler ile birlikte bütün istatistikler sıfırlanır
 func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 	log.Println("--- PostgresTeamService.ResetTeamsToDefaults STARTED ---")
 
 	defaultTeams := []models.Team{
-		{Name: "Chelsea", Strength: 85}, // Default names and strengths
+		{Name: "Chelsea", Strength: 85}, 
 		{Name: "Arsenal", Strength: 82},
 		{Name: "Manchester City", Strength: 90},
 		{Name: "Liverpool", Strength: 88},
 	}
 
 	// Önce bütün eski istatistikler sıfırlanmalı
+	// Önceden oluşturduğumuz ResetAllTeamStats fonksiyonu ile takım puanlarını, gol sayılarını vs. sıfırlarız.
 	if err := s.ResetAllTeamStats(ctx); err != nil {
 		
 		return fmt.Errorf("ResetTeamsToDefaults: Error while resetting team statistics: %w", err)
 	}
 
-	// 2. Get current teams (now with zeroed stats), ordered by ID for consistent updates.
+	// Güncellemelerin tutarlı olması için takımlar sıralı şekilde alınır.
 	currentTeams, err := s.getAllTeamsOrderedByID(ctx)
 	if err != nil {
 		return fmt.Errorf("ResetTeamsToDefaults: Error fetching current teams after stat reset: %w", err)
 	}
 
-	// We expect 4 teams to be present. If not, the behavior might be undefined or error out.
-	// This function assumes 4 teams exist and will be updated.
+	
 	if len(currentTeams) < len(defaultTeams) {
-		// This scenario should ideally be handled by ensuring 4 teams always exist,
-		// or this function could also create missing teams up to the default count.
-		// For now, log a warning and proceed if possible, or return an error.
 		log.Printf("ResetTeamsToDefaults: Warning! Database has %d teams, but %d default configurations exist. Will update available teams.", len(currentTeams), len(defaultTeams))
 		if len(currentTeams) == 0 && len(defaultTeams) > 0 {
 			return fmt.Errorf("ResetTeamsToDefaults: No teams in database to reset to defaults. Please ensure teams are seeded first.")
 		}
 	}
 
+	
 	tx, err := s.DB.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("ResetTeamsToDefaults: Could not begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	// Update existing teams (up to the number of default teams) with default names and strengths
+	// Varolan takımlar varsayılan takımlarla güncellenir
 	for i, defaultTeam := range defaultTeams {
+		// Her bir varsayılan takıma karşılık veritabanında takım olup olmadığı kontrol edilir
 		if i < len(currentTeams) {
 			teamToUpdate := currentTeams[i] // Update teams in their current ID order
 			log.Printf("  Resetting to default: Team ID %d -> New Name: %s, New Strength: %d", teamToUpdate.ID, defaultTeam.Name, defaultTeam.Strength)
 
-			// Check if new default name conflicts with an existing name (other than the current team being updated if names are shuffled)
+			// Yeni name'in benzersizliği kontrol edilir
 			var conflictingID int
 			errNameCheck := tx.QueryRow(ctx, queries.CreateTeamCheckExistsSQL, defaultTeam.Name).Scan(&conflictingID)
-			if errNameCheck == nil && conflictingID != teamToUpdate.ID {
+			if errNameCheck == nil && conflictingID != teamToUpdate.ID { // Veritabanında aynı isimli bir takım daha bulundu
 				
 				return fmt.Errorf("ResetTeamsToDefaults: Default name '%s' for team ID %d is already in use by team ID %d", defaultTeam.Name, teamToUpdate.ID, conflictingID)
 			}
-			if errNameCheck != nil && !errors.Is(errNameCheck, pgx.ErrNoRows) {
+			if errNameCheck != nil && !errors.Is(errNameCheck, pgx.ErrNoRows) { // Farklı bir hata oluştu
 				return fmt.Errorf("ResetTeamsToDefaults: Error checking name conflict for '%s': %w", defaultTeam.Name, errNameCheck)
 			}
-
+			
+			// Mevcut takım default'a güncellenir 
 			cmdTag, err := tx.Exec(ctx, queries.UpdateTeamNameAndStrengthSQL, defaultTeam.Name, defaultTeam.Strength, teamToUpdate.ID)
 			if err != nil {
 				return fmt.Errorf("ResetTeamsToDefaults: Error updating name/strength for team (ID: %d): %w", teamToUpdate.ID, err)
 			}
 			if cmdTag.RowsAffected() == 0 {
-				// This shouldn't happen if currentTeams[i] exists.
+				// currentTeams[i] mevcutsa bu hatayı vermemesi gerekir. Gerçekleşmesi çok olası olmayan bir hata.
 				log.Printf("ResetTeamsToDefaults: Name/strength update for team (ID: %d) affected 0 rows.", teamToUpdate.ID)
 			}
-		} else {
+		} else { // Veritabanında default team'e karşılık gelecek takım yoksa bu hata döndürülür
 			log.Printf("ResetTeamsToDefaults: Warning: No existing team in DB at index %d to map to default team '%s'.", i, defaultTeam.Name)
 		}
 	}
 
+	// For döngüsü tamamlandıktan sonra transaction onaylanarak değişiklikler veritabanında kalıcı hale getirilir
 	if err = tx.Commit(ctx); err != nil {
 		return fmt.Errorf("ResetTeamsToDefaults: Could not commit transaction: %w", err)
 	}
@@ -352,7 +352,7 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 	return nil
 }
 
-// getAllTeamsOrderedByID is an unexported helper method to retrieve all teams ordered by their ID.
+// Veritabanındaki takımları ID'ye göre artan sırada almak için oluşturulan helper method. (unexported)
 func (s *PostgresTeamService) getAllTeamsOrderedByID(ctx context.Context) ([]models.Team, error) {
 	rows, err := s.DB.Query(ctx, queries.GetAllTeamsOrderedByIDSQL)
 	if err != nil {
