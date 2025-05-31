@@ -245,25 +245,24 @@ func (s *PostgresTeamService) UpdateTeamName(ctx context.Context, teamID int, ne
 		return fmt.Errorf("team name cannot be empty")
 	}
 
-	// Check if the new name is already used by another team
+	// Yeni Name'in benzersizliği kontrol edilir
 	var existingID int
 	err := s.DB.QueryRow(ctx, queries.CreateTeamCheckExistsSQL, trimmedName).Scan(&existingID)
-	if err == nil && existingID != teamID { // Name found and it belongs to a different team
+	if err == nil && existingID != teamID { // Aynı isimde farklı bir takım bulundu
 		return fmt.Errorf("name '%s' is already in use by another team (ID: %d)", trimmedName, existingID)
 	}
-	// If err is not pgx.ErrNoRows, it's an unexpected DB error during the check
+	// Eğer hata ismi pgx.ErrNoRows değilse, kontrol aşamasında bilinmeyen bir hata oluşmuş demektir
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamName: Error checking new name '%s': %w", trimmedName, err)
 	}
-
-	// Proceed to update the name
+	
+	// Kontrol aşaması bitti, yeni isim güncelleme aşamasına geçilebilir
 	cmdTag, err := s.DB.Exec(ctx, queries.UpdateTeamNameSQL, trimmedName, teamID)
-	if err != nil {
-		// Catch unique constraint violation specifically if the above check missed a race condition or if the DB enforces it differently.
-		if strings.Contains(err.Error(), "violates unique constraint") || strings.Contains(err.Error(), "duplicate key") {
+	if err != nil { 
+		if strings.Contains(err.Error(), "violates unique constraint") || strings.Contains(err.Error(), "duplicate key") { // Benzersizlik hatası
 			return fmt.Errorf("name '%s' is already in use or another unique constraint was violated", trimmedName)
 		}
-		return fmt.Errorf("PostgresTeamService.UpdateTeamName: Error updating name for team (ID: %d) to '%s': %w", teamID, trimmedName, err)
+		return fmt.Errorf("PostgresTeamService.UpdateTeamName: Error updating name for team (ID: %d) to '%s': %w", teamID, trimmedName, err) // Diğer hatalar
 	}
 	if cmdTag.RowsAffected() == 0 {
 		return fmt.Errorf("PostgresTeamService.UpdateTeamName: Team (ID: %d) not found or name not updated", teamID)
@@ -284,9 +283,9 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 		{Name: "Liverpool", Strength: 88},
 	}
 
-	// 1. Reset all league statistics for all teams first.
+	// Önce bütün eski istatistikler sıfırlanmalı
 	if err := s.ResetAllTeamStats(ctx); err != nil {
-		// The error from ResetAllTeamStats already includes context.
+		
 		return fmt.Errorf("ResetTeamsToDefaults: Error while resetting team statistics: %w", err)
 	}
 
