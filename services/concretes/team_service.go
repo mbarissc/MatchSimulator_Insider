@@ -101,7 +101,7 @@ func (s *PostgresTeamService) UpdateTeamStatsAfterMatch(ctx context.Context, tea
 		winIncrement = 1
 	} else if goalsScored < goalsConceded {
 		lossIncrement = 1
-	} else { 
+	} else {
 		pointsEarned = 1
 		drawIncrement = 1
 	}
@@ -221,7 +221,7 @@ func (s *PostgresTeamService) AdjustTeamStatsForScoreChange(ctx context.Context,
 
 func (s *PostgresTeamService) UpdateTeamStrength(ctx context.Context, teamID int, newStrength int) error {
 	// Strength 1 ile 100 arasında bir değer almalıdır
-	if newStrength < 1 || newStrength > 100 { 
+	if newStrength < 1 || newStrength > 100 {
 		return fmt.Errorf("invalid strength value: %d. Strength must be between 1 and 100", newStrength)
 	}
 
@@ -258,7 +258,7 @@ func (s *PostgresTeamService) UpdateTeamName(ctx context.Context, teamID int, ne
 	
 	// Kontrol aşaması bitti, yeni isim güncelleme aşamasına geçilebilir
 	cmdTag, err := s.DB.Exec(ctx, queries.UpdateTeamNameSQL, trimmedName, teamID)
-	if err != nil { 
+	if err != nil {
 		if strings.Contains(err.Error(), "violates unique constraint") || strings.Contains(err.Error(), "duplicate key") { // Benzersizlik hatası
 			return fmt.Errorf("name '%s' is already in use or another unique constraint was violated", trimmedName)
 		}
@@ -328,7 +328,7 @@ func (s *PostgresTeamService) ResetTeamsToDefaults(ctx context.Context) error {
 				return fmt.Errorf("ResetTeamsToDefaults: Error checking name conflict for '%s': %w", defaultTeam.Name, errNameCheck)
 			}
 			
-			// Mevcut takım default'a güncellenir 
+			// Mevcut takım default'a güncellenir
 			cmdTag, err := tx.Exec(ctx, queries.UpdateTeamNameAndStrengthSQL, defaultTeam.Name, defaultTeam.Strength, teamToUpdate.ID)
 			if err != nil {
 				return fmt.Errorf("ResetTeamsToDefaults: Error updating name/strength for team (ID: %d): %w", teamToUpdate.ID, err)
