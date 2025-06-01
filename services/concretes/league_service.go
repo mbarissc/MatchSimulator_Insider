@@ -30,7 +30,7 @@ func (s *LeagueService) GetCurrentWeek(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("LeagueService.GetCurrentWeek: Error retrieving matches: %w", err)
 	}
-	// rest of the logic is the same
+	
 	if len(allMatches) == 0 {
 		return 1, nil
 	}
