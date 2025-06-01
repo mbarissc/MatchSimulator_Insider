@@ -13,18 +13,17 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// PostgresMatchService implements IMatchService using a PostgreSQL database.
+
 type PostgresMatchService struct {
 	DB *pgx.Conn
 }
 
-// NewPostgresMatchService creates a new instance of PostgresMatchService.
+
 func NewPostgresMatchService(db *pgx.Conn) abstracts.IMatchService {
 	return &PostgresMatchService{DB: db}
 }
 
-// GenerateAndStoreFixture generates the league fixture for the given teams and stores it in the database.
-// It currently supports exactly 4 teams and will delete any existing matches before creating new ones.
+
 func (s *PostgresMatchService) GenerateAndStoreFixture(ctx context.Context, teams []models.Team) error {
 	if len(teams) != 4 {
 		return fmt.Errorf("PostgresMatchService.GenerateAndStoreFixture: Fixture generation is currently only supported for 4 teams, received: %d", len(teams))
@@ -40,17 +39,19 @@ func (s *PostgresMatchService) GenerateAndStoreFixture(ctx context.Context, team
 		teamIDs[i] = t.ID
 	}
 
-	// Static fixture schedule for 4 teams (6 weeks, 12 matches total)
+	// 6 hafta totalde 12 maçın fikstür yapısı
 	schedule := [][][2]int{
-		{{teamIDs[0], teamIDs[1]}, {teamIDs[2], teamIDs[3]}}, // Week 1
-		{{teamIDs[0], teamIDs[2]}, {teamIDs[1], teamIDs[3]}}, // Week 2
-		{{teamIDs[0], teamIDs[3]}, {teamIDs[1], teamIDs[2]}}, // Week 3
-		{{teamIDs[1], teamIDs[0]}, {teamIDs[3], teamIDs[2]}}, // Week 4 (Return legs)
-		{{teamIDs[2], teamIDs[0]}, {teamIDs[3], teamIDs[1]}}, // Week 5
-		{{teamIDs[3], teamIDs[0]}, {teamIDs[2], teamIDs[1]}}, // Week 6
+		{{teamIDs[0], teamIDs[1]}, {teamIDs[2], teamIDs[3]}}, // 1. hafta
+		{{teamIDs[0], teamIDs[2]}, {teamIDs[1], teamIDs[3]}}, // 2. hafta
+		{{teamIDs[0], teamIDs[3]}, {teamIDs[1], teamIDs[2]}}, // 3. hafta
+		{{teamIDs[1], teamIDs[0]}, {teamIDs[3], teamIDs[2]}}, // 4. hafta
+		{{teamIDs[2], teamIDs[0]}, {teamIDs[3], teamIDs[1]}}, // 5. hafta
+		{{teamIDs[3], teamIDs[0]}, {teamIDs[2], teamIDs[1]}}, // 6. hafta
 	}
 
 	currentWeek := 1
+
+	// iç içe for döngüsüyle her maç ayrı ayrı bilgileriyle matchesToCreate slice'ına yazdırılır
 	for _, weeklyMatches := range schedule {
 		for _, matchPair := range weeklyMatches {
 			matchesToCreate = append(matchesToCreate, models.Match{
@@ -58,19 +59,21 @@ func (s *PostgresMatchService) GenerateAndStoreFixture(ctx context.Context, team
 				HomeTeamID: matchPair[0],
 				AwayTeamID: matchPair[1],
 				IsPlayed:   false,
-				HomeGoals:  nil, // Not played yet
-				AwayGoals:  nil, // Not played yet
+				HomeGoals:  nil, // henüz oynanmadı
+				AwayGoals:  nil, // henüz oynanmadı
 			})
 		}
 		currentWeek++
 	}
 
+	// transaction başlatılır
 	tx, err := s.DB.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("PostgresMatchService.GenerateAndStoreFixture: Could not begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx) // Rollback in case of error
+	defer tx.Rollback(ctx) 
 
+	// maçlar veritabanına insert edilir
 	for _, match := range matchesToCreate {
 		_, err = tx.Exec(ctx, queries.InsertMatchSQL,
 			match.Week, match.HomeTeamID, match.AwayTeamID,
@@ -87,8 +90,10 @@ func (s *PostgresMatchService) GenerateAndStoreFixture(ctx context.Context, team
 	return nil
 }
 
-// GetMatchesByWeek retrieves all matches for a specific week, ordered by ID.
+// Belirli bir haftanın maçlarını getirir
 func (s *PostgresMatchService) GetMatchesByWeek(ctx context.Context, week int) ([]models.Match, error) {
+	
+	// maçlar veritabanından çekilir
 	rows, err := s.DB.Query(ctx, queries.GetMatchesByWeekSQL, week)
 	if err != nil {
 		return nil, fmt.Errorf("PostgresMatchService.GetMatchesByWeek: Error retrieving matches for week %d: %w", week, err)
@@ -96,6 +101,8 @@ func (s *PostgresMatchService) GetMatchesByWeek(ctx context.Context, week int) (
 	defer rows.Close()
 
 	var matches []models.Match
+	
+	// rows nesnesi üstünden match verileri alınır ve matches slice'ına yazdırılır.
 	for rows.Next() {
 		var match models.Match
 		if err := rows.Scan(
@@ -112,7 +119,9 @@ func (s *PostgresMatchService) GetMatchesByWeek(ctx context.Context, week int) (
 	return matches, nil
 }
 
-// GetMatchByID retrieves a specific match by its ID.
+// id'ye göre maç bilgilerini alma metodu.
+// dönüş tipi pointer olarak belirlenmesinin sebebi maç veritabanında bulunamadığında bunu nil ile ifade edebilmektir.
+// doğrudan models.Match olarak döndürseydi gerçekten boş bir maç mı döndü yoksa maç mı bulunamadı ayrımını yapmak daha zor olurdu.
 func (s *PostgresMatchService) GetMatchByID(ctx context.Context, id int) (*models.Match, error) {
 	var match models.Match
 	err := s.DB.QueryRow(ctx, queries.GetMatchByIDSQL, id).Scan(
@@ -128,7 +137,7 @@ func (s *PostgresMatchService) GetMatchByID(ctx context.Context, id int) (*model
 	return &match, nil
 }
 
-// UpdateMatchResult updates the score and played status of a specific match.
+
 func (s *PostgresMatchService) UpdateMatchResult(ctx context.Context, matchID int, homeGoals, awayGoals int, isPlayed bool) error {
 	cmdTag, err := s.DB.Exec(ctx, queries.UpdateMatchResultSQL, homeGoals, awayGoals, isPlayed, matchID)
 	if err != nil {
@@ -140,7 +149,7 @@ func (s *PostgresMatchService) UpdateMatchResult(ctx context.Context, matchID in
 	return nil
 }
 
-// GetAllMatches retrieves all matches from the database, ordered by week and then ID.
+// veritabanındaki tüm maçları hafta ve id ye göre sıralı şekilde alır
 func (s *PostgresMatchService) GetAllMatches(ctx context.Context) ([]models.Match, error) {
 	rows, err := s.DB.Query(ctx, queries.GetAllMatchesSQL)
 	if err != nil {
@@ -165,15 +174,15 @@ func (s *PostgresMatchService) GetAllMatches(ctx context.Context) ([]models.Matc
 	return matches, nil
 }
 
-// SimulateMatchOutcome simulates the score of a match between two teams
+// İki takım arasındaki oynanan maçları simüle eder
 func (s *PostgresMatchService) SimulateMatchOutcome(ctx context.Context, homeTeam models.Team, awayTeam models.Team) (homeGoals int, awayGoals int, err error) {
-	// Parameters and constants for simulation
-	maxPotentialGoals := 6 // Max potential scoring opportunities for each team
-	strengthDivisor := 140 // Divisor to adjust probability basada on strength; higher means fewer goals
-	homeAdvantage := 10    // Bonus strength for the home team
+	
+	maxPotentialGoals := 6 // Atılabilecek maksimum potansiyel gol (her iki takım için ayrı ayrı)
+	strengthDivisor := 140 
+	homeAdvantage := 10    // Ev sahibi takım için +10 bonus strength verilir
 
 	effectiveHomeStrength := homeTeam.Strength + homeAdvantage
-	// Ensure effective strength is not negative
+	
 	if effectiveHomeStrength < 0 {
 		effectiveHomeStrength = 0
 	}
@@ -183,43 +192,38 @@ func (s *PostgresMatchService) SimulateMatchOutcome(ctx context.Context, homeTea
 		effectiveAwayStrength = 0
 	}
 
-	// Calculate goals
+	// gol hesaplama
 	for i := 0; i < maxPotentialGoals; i++ {
-		// Chance for home team to score this potential goal
+		// strengthDivisor ile rastgele bir sayı üretilir (0-140) bu sayı efektif güçten düşükse takım gol attı kabul edilir
 		if rand.Intn(strengthDivisor) < effectiveHomeStrength {
 			homeGoals++
 		}
-		// Chance for away team to score this potential goal
+		
 		if rand.Intn(strengthDivisor) < effectiveAwayStrength {
 			awayGoals++
 		}
 	}
-	// This simulation currently always succeeds, so no error is returned.
+	
 	return homeGoals, awayGoals, nil
 }
 
-// EditMatchScore updates the score of a specific match and returns the original match data.
-// The match's 'is_played' status is set to true as part of this operation.
+
 func (s *PostgresMatchService) EditMatchScore(ctx context.Context, matchID int, newHomeGoals int, newAwayGoals int) (originalMatch models.Match, err error) {
 	log.Printf("PostgresMatchService.EditMatchScore: Initiating score edit for Match ID %d. New score: %d-%d", matchID, newHomeGoals, newAwayGoals)
 
-	// 1. Get the original state of the match (to know the old score)
+	
 	originalMatchPtr, err := s.GetMatchByID(ctx, matchID)
 	if err != nil {
 		return models.Match{}, fmt.Errorf("PostgresMatchService.EditMatchScore: Could not find or retrieve match to edit (ID: %d): %w", matchID, err)
 	}
-	originalMatch = *originalMatchPtr // Dereference pointer
+	originalMatch = *originalMatchPtr 
 
-	// If a score is being edited, it's logical to consider the match as played.
-	// The UpdateMatchResult method already handles setting is_played to true.
-
-	// 2. Update the match score and played status using the existing UpdateMatchResult method.
 	err = s.UpdateMatchResult(ctx, matchID, newHomeGoals, newAwayGoals, true)
 	if err != nil {
-		// Return originalMatch data even if update fails, so LeagueService can know what the scores were.
+		
 		return originalMatch, fmt.Errorf("PostgresMatchService.EditMatchScore: Error updating score for match (ID: %d): %w", matchID, err)
 	}
 
 	log.Printf("PostgresMatchService.EditMatchScore: Score for Match ID %d successfully updated to %d-%d.", matchID, newHomeGoals, newAwayGoals)
-	return originalMatch, nil // Return the original (pre-update) match data
+	return originalMatch, nil
 }
