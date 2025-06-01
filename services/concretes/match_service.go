@@ -71,7 +71,7 @@ func (s *PostgresMatchService) GenerateAndStoreFixture(ctx context.Context, team
 	if err != nil {
 		return fmt.Errorf("PostgresMatchService.GenerateAndStoreFixture: Could not begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx) 
+	defer tx.Rollback(ctx)
 
 	// maçlar veritabanına insert edilir
 	for _, match := range matchesToCreate {
@@ -178,8 +178,8 @@ func (s *PostgresMatchService) GetAllMatches(ctx context.Context) ([]models.Matc
 func (s *PostgresMatchService) SimulateMatchOutcome(ctx context.Context, homeTeam models.Team, awayTeam models.Team) (homeGoals int, awayGoals int, err error) {
 	
 	maxPotentialGoals := 6 // Atılabilecek maksimum potansiyel gol (her iki takım için ayrı ayrı)
-	strengthDivisor := 140 
-	homeAdvantage := 10    // Ev sahibi takım için +10 bonus strength verilir
+	strengthDivisor := 140
+	homeAdvantage := 10 // Ev sahibi takım için +10 bonus strength verilir
 
 	effectiveHomeStrength := homeTeam.Strength + homeAdvantage
 	
@@ -216,7 +216,7 @@ func (s *PostgresMatchService) EditMatchScore(ctx context.Context, matchID int, 
 	if err != nil {
 		return models.Match{}, fmt.Errorf("PostgresMatchService.EditMatchScore: Could not find or retrieve match to edit (ID: %d): %w", matchID, err)
 	}
-	originalMatch = *originalMatchPtr 
+	originalMatch = *originalMatchPtr
 
 	err = s.UpdateMatchResult(ctx, matchID, newHomeGoals, newAwayGoals, true)
 	if err != nil {
